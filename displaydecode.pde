@@ -5,7 +5,8 @@ int val;      // Data received from the serial port
 PImage bg;
 PFont lcdfont,lcdfontbig;
 int b,coms,com,i,ch,line,pos,st;
-int meter,led,extmeter;
+int meter,led,extmeter,backlightr,backlightg,backlightb;
+int buttonslight;
 int menu,menuid,menuon=0;
 
 int[] line0= new int[22];
@@ -20,8 +21,6 @@ void setup()
 {
   size(1720, 630);
   
-  //fullScreen();
-  //surface.setResizable(true);
 bg = loadImage("ft857.jpg");
 lcdfont = createFont("lcd.otf",24);
 lcdfontbig = createFont("lcd.otf",36);
@@ -35,14 +34,6 @@ lcdfontbig = createFont("lcd.otf",36);
 
 void draw()
 {
-  
-//image(bg, 0, 0, width, height);
-
-  //textSize (12);
- 
-  //text(words, 250, 160);
-  //text(words, width/3.45, height/2.6);
-  
    b = readdata();
 
   if (b == 165) {
@@ -197,11 +188,39 @@ void draw()
       meter = readdata();
       checksum();
     }
+    
+    //Screen backlight RGB
+    if (com == 74) {  // hex 4B
+      /*ch = readdata();
+      text (ch,200,60);
+      ch = readdata();
+      text (ch,300,60);*/
+      /*
+      backlightg=ch/2;
+      if (backlightb>128) {
+      backlightb=ch-128;
+      } else {
+        backlightb=ch;
+      }
+      backlightr = readdata();
+      if (backlightr>128) {
+      backlightr=backlightr-128;
+      }   */    
+      checksum();
+
+    }
 
     //LED
     if (com == 75) {  // hex 4B
       led = readdata();
       checksum();
+      
+   if (led > 128) {
+    led = led - 128;
+    buttonslight=1;
+  } else {
+    buttonslight=0;
+  }
 
     }
 
@@ -216,8 +235,10 @@ void draw()
 
 
 int readdata() {
-    int val = myPort.read();
-    //println (val);
+  
+    val = myPort.read();
+
+    println (val);
   return val ;
 }
 
@@ -227,6 +248,11 @@ void checksum() {
 
 void displaydata() {
     background(bg);
+    noStroke();
+        //text (backlightr+" "+backlightg+" "+backlightb,200,60);
+    fill(backlightr,backlightg,backlightb,90);
+    
+    rect(350, 214, 390, 128, 7);
   //text (char(st), 100+(pos+i)*26,100+(line)*26);
   for(i=0;i<22;i++){
         fill(#FF0000, 90);
@@ -235,6 +261,8 @@ void displaydata() {
      fill(#000000, 90);
  text (char(line1[i]), 400+(i)*16,250+(1)*24);
  textFont(lcdfontbig);
+ fill(#000000, 70);
+ text (char(line2[i]), 411+(i)*24,261+(2)*24);
  fill(#0000FF, 95);
  text (char(line2[i]), 410+(i)*24,260+(2)*24);
  textFont(lcdfont);
@@ -261,17 +289,14 @@ void displaydata() {
       if (ch == 127) {
         ch = 45; // fast -
       }
-      /*if (ch == 125) {
-        ch = 35; // lock #
-      }*/
  text (char(ch), 380+(i)*16,270+(3)*22); 
   }
   
   //Meter
   strokeWeight(1);
   stroke(0, 99);
-  for (i=0;i<=(100/7);i++){
-    line(355, 330-i*7, 360, 330-i*7);
+  for (i=0;i<=(100/6);i++){
+    line(357, 330-i*6, 360, 330-i*6);
   }
   
   for (i=0;i<meter;i++){
@@ -279,23 +304,47 @@ void displaydata() {
     line(360, 330-i, 365+(i*i/250), 330-i);
   }
   
-  if (led > 128) {
-    led = led - 128;
-  }
   noStroke();
   switch (led) {
     case 9:
     fill(#00FF00, 90); //RX GREEN
-    rect(830, 130, 20, 40);
+    rect(830, 130, 20, 40,7);
       break;
     case 10:
     fill(#FF0000, 90);
-    rect(830, 130, 20, 40); //TX RED
+    rect(830, 130, 20, 40,7); //TX RED
       break;
     case 1:
     fill(#0000FF, 90);
-    rect(830, 130, 20, 40); //BLUE
+    rect(830, 130, 20, 40,7); //BLUE
       break;
+  }
+  
+  if (buttonslight==1) {
+    fill(#FF8000, 90); //Buttons light
+    rect(687, 122, 40, 15,7); //power
+    
+    rect(578, 122, 40, 15,7); //UP
+    rect(470, 122, 40, 15,7);
+    rect(362, 122, 40, 15,7);
+    
+    rect(647, 385, 75, 15,7);//ABC
+    rect(505, 385, 75, 15,7);
+    rect(365, 387, 75, 15,7);
+    
+    rect(200, 205, 42, 10,7);//Left
+    rect(190, 292, 42, 10,7);
+    rect(190, 380, 58, 15,7);
+    
+    fill(#FF8000, 50); //Buttons light
+    rect(925, 100, 30, 10,7); //Dial UP 
+    rect(1035, 95, 30, 10,7);
+    
+    fill(#FF8000, 30); //Buttons light
+    rect(1170, 205, 10, 30,7); //Dial right
+    rect(1170, 350, 10, 30,7);
+    
+    
   }
   
   //EXTMETER
